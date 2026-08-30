@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>全职法师·原著同步模拟器</title>
+<style>
+/* SECTION: base */
+:root{
+  --bg-0:#080b16; --bg-1:#0e1226; --bg-2:#151b36;
+  --panel:rgba(18,23,46,.92); --panel-2:rgba(26,32,60,.95);
+  --gold:#d8a020; --gold-2:#e6c86a; --gold-dim:#8a6d2f;
+  --ink:#e9e4d4; --ink-dim:#9a96a8; --ink-faint:#6b6880;
+  --blue:#6f86ff; --violet:#9a6fff; --red:#e2574c; --green:#5fae7f;
+  --serif:"Songti SC","STSong","SimSun","Noto Serif CJK SC",serif;
+  --sans:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--sans);color:var(--ink);background:var(--bg-0);
+  background-image:
+    radial-gradient(1200px 700px at 80% -10%, rgba(106,78,255,.16), transparent 60%),
+    radial-gradient(900px 600px at -10% 110%, rgba(38,160,255,.10), transparent 60%),
+    radial-gradient(2px 2px at 20% 30%, rgba(230,200,106,.5), transparent 100%),
+    radial-gradient(2px 2px at 70% 12%, rgba(230,200,106,.35), transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 65%, rgba(180,200,255,.4), transparent 100%),
+    radial-gradient(1.5px 1.5px at 88% 48%, rgba(230,200,106,.3), transparent 100%),
+    radial-gradient(1px 1px at 10% 80%, rgba(200,210,255,.35), transparent 100%);
+  overflow:hidden;
+}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:15px;color:var(--ink);background:rgba(8,11,24,.7);
+  border:1px solid rgba(216,160,32,.35);border-radius:10px;padding:10px 12px;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(216,160,32,.18)}
+textarea{resize:vertical;min-height:76px;line-height:1.6}
+label{display:block;font-size:13px;color:var(--ink-dim);margin:0 0 6px 2px;letter-spacing:1px}
+.field{margin-bottom:16px}
+.hint{font-size:12px;color:var(--ink-faint);margin-top:5px;line-height:1.5}
+.hidden{display:none !important}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:rgba(216,160,32,.25);border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* SECTION: buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 22px;border-radius:12px;border:1px solid rgba(216,160,32,.55);
+  background:linear-gradient(160deg,rgba(216,160,32,.16),rgba(216,160,32,.05));
+  color:var(--gold-2);font-size:15px;letter-spacing:2px;transition:.18s;user-select:none}
+.btn:hover{border-color:var(--gold-2);box-shadow:0 0 18px rgba(216,160,32,.25);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn.primary{background:linear-gradient(160deg,#d8a020,#a87610);color:#1b1206;font-weight:700;border-color:#e6c86a}
+.btn.primary:hover{box-shadow:0 0 24px rgba(216,160,32,.45)}
+.btn.ghost{border-color:rgba(154,150,168,.35);color:var(--ink-dim);background:transparent}
+.btn.danger{border-color:rgba(226,87,76,.5);color:#f0938a}
+.btn.small{padding:7px 14px;font-size:13px;border-radius:9px;letter-spacing:1px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* SECTION: views */
+.view{display:none;height:100dvh}
+.view.active{display:flex}
+.scroll-view{overflow-y:auto;justify-content:center}
+.scroll-inner{width:min(760px,100%);padding:40px 20px 60px}
+
+/* SECTION: intro */
+#view-intro{flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+.intro-sigil{width:88px;height:88px;border-radius:50%;border:2px solid rgba(216,160,32,.6);
+  display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:22px;
+  background:radial-gradient(circle at 35% 30%,rgba(230,200,106,.25),rgba(216,160,32,.05) 70%);
+  box-shadow:0 0 40px rgba(216,160,32,.25), inset 0 0 24px rgba(216,160,32,.15)}
+.intro-title{font-family:var(--serif);font-size:clamp(40px,8vw,64px);letter-spacing:10px;
+  background:linear-gradient(180deg,#f5e6b8,#d8a020 75%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 30px rgba(216,160,32,.25)}
+.intro-sub{font-family:var(--serif);font-size:clamp(16px,3vw,21px);letter-spacing:6px;color:var(--gold-2);margin-top:8px}
+.intro-desc{color:var(--ink-dim);font-size:14px;line-height:2;margin:26px auto 34px;max-width:520px}
+.intro-actions{display:flex;flex-direction:column;gap:14px;width:min(340px,88vw)}
+.intro-meta{margin-top:34px;font-size:12px;color:var(--ink-faint);line-height:1.9}
+.intro-novel-card{width:min(480px,92vw);margin:0 auto 24px;padding:22px;border-radius:var(--radius);
+  border:1px dashed rgba(216,160,32,.6);background:rgba(216,160,32,.06);text-align:center}
+.gate-title{font-family:var(--serif);font-size:18px;color:var(--gold-2);letter-spacing:3px;margin-bottom:10px}
+.gate-desc{font-size:13px;color:var(--ink-dim);line-height:1.9;margin-bottom:16px}
+.gate-status{margin-top:12px;font-size:12.5px;color:var(--ink-faint);min-height:16px}
+
+/* SECTION: create */
+.form-card{background:var(--panel);border:1px solid rgba(216,160,32,.3);border-radius:var(--radius);
+  padding:26px 22px;margin-bottom:18px;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.form-title{font-family:var(--serif);color:var(--gold-2);font-size:20px;letter-spacing:4px;margin-bottom:4px}
+.form-sub{font-size:12px;color:var(--ink-faint);margin-bottom:18px}
+.row{display:flex;gap:14px}
+.row .field{flex:1}
+.radio-row{display:flex;gap:10px;flex-wrap:wrap}
+.radio-pill{position:relative}
+.radio-pill input{position:absolute;opacity:0;pointer-events:none}
+.radio-pill span{display:inline-block;padding:9px 20px;border-radius:999px;border:1px solid rgba(154,150,168,.35);
+  color:var(--ink-dim);font-size:14px;cursor:pointer;transition:.15s;user-select:none}
+.radio-pill input:checked + span{border-color:var(--gold);color:var(--gold-2);background:rgba(216,160,32,.12);
+  box-shadow:0 0 12px rgba(216,160,32,.2)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.chip{padding:6px 13px;border-radius:999px;border:1px solid rgba(154,150,168,.3);background:rgba(255,255,255,.03);
+  color:var(--ink-dim);font-size:12.5px;transition:.15s}
+.chip:hover{border-color:var(--gold);color:var(--gold-2)}
+.page-head{text-align:center;margin-bottom:26px}
+.page-head h2{font-family:var(--serif);font-size:28px;letter-spacing:6px;color:var(--gold-2)}
+.page-head p{font-size:13px;color:var(--ink-faint);margin-top:8px}
+.link-btn{background:none;border:none;color:var(--gold-2);font-size:13px;text-decoration:underline;padding:6px}
+
+/* SECTION: main layout */
+#view-main{flex-direction:column}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  background:linear-gradient(180deg,rgba(14,18,38,.97),rgba(14,18,38,.85));
+  border-bottom:1px solid rgba(216,160,32,.28);flex-wrap:wrap}
+.topbar .brand{font-family:var(--serif);font-size:18px;letter-spacing:3px;color:var(--gold-2);white-space:nowrap}
+.chapter-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;
+  border:1px solid rgba(111,134,255,.45);background:rgba(111,134,255,.1);color:#aebaff;font-size:12.5px;cursor:pointer;
+  max-width:min(46vw,340px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chapter-badge:hover{border-color:var(--blue);box-shadow:0 0 12px rgba(111,134,255,.25)}
+.topbar .spacer{flex:1}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1px solid rgba(216,160,32,.35);background:rgba(216,160,32,.07);
+  color:var(--gold-2);font-size:16px;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
+.icon-btn:hover{border-color:var(--gold-2);box-shadow:0 0 10px rgba(216,160,32,.25)}
+.cmd-row{display:flex;gap:8px;padding:8px 14px;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.05);
+  background:rgba(10,13,28,.6);flex-shrink:0}
+.cmd-row::-webkit-scrollbar{height:4px}
+.cmd-chip{flex-shrink:0;padding:6px 14px;border-radius:999px;border:1px solid rgba(216,160,32,.4);
+  background:rgba(216,160,32,.06);color:var(--gold-2);font-size:13px;letter-spacing:1px;transition:.15s}
+.cmd-chip:hover{background:rgba(216,160,32,.16)}
+
+/* SECTION: stream */
+#stream{flex:1;overflow-y:auto;padding:20px 14px 30px;display:flex;flex-direction:column;gap:16px;
+  scroll-behavior:smooth}
+.stream-inner{width:min(820px,100%);margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.msg{max-width:100%;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg-user{align-self:flex-end;max-width:86%;background:linear-gradient(150deg,rgba(216,160,32,.22),rgba(216,160,32,.09));
+  border:1px solid rgba(216,160,32,.5);border-radius:14px 14px 4px 14px;padding:11px 16px;font-size:14.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.msg-ai{align-self:stretch;background:linear-gradient(170deg,#fdfaf1,#f4eeda);color:#2f2a20;
+  border:1px solid rgba(216,160,32,.75);border-radius:4px 14px 14px 14px;padding:18px 20px;
+  font-family:var(--serif);font-size:15.5px;line-height:1.95;box-shadow:0 6px 26px rgba(0,0,0,.35);word-break:break-word}
+.msg-ai p{margin:0 0 10px}
+.msg-ai p:last-child{margin-bottom:0}
+.msg-ai blockquote{margin:10px 0;padding:6px 14px;border-left:3px solid var(--gold);
+  background:rgba(216,160,32,.08);border-radius:0 8px 8px 0}
+.msg-ai blockquote p{margin:0 0 4px}
+.msg-ai strong{color:#7a4a08}
+.msg-note{align-self:center;max-width:92%;text-align:center;font-size:12.5px;color:var(--ink-faint);
+  border:1px dashed rgba(154,150,168,.3);border-radius:999px;padding:6px 18px;line-height:1.6}
+.ai-section-head{display:inline-block;margin:14px 0 6px;padding:3px 12px;border-radius:6px;font-size:13.5px;
+  font-family:var(--sans);letter-spacing:2px;font-weight:700}
+.sec-change{background:rgba(95,174,127,.16);color:#2e7d53;border:1px solid rgba(95,174,127,.5)}
+.sec-choice{background:rgba(111,134,255,.14);color:#3f57c9;border:1px solid rgba(111,134,255,.5)}
+.sec-danger{background:rgba(226,87,76,.14);color:#b23a30;border:1px solid rgba(226,87,76,.55)}
+.sec-city{background:rgba(120,120,140,.12);color:#5a5a6e;border:1px solid rgba(120,120,140,.4)}
+.sec-generic{background:rgba(216,160,32,.12);color:#8a6d2f;border:1px solid rgba(216,160,32,.45)}
+.choice-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;font-family:var(--sans)}
+.choice-btn{text-align:left;padding:10px 14px;border-radius:10px;border:1px solid rgba(111,134,255,.5);
+  background:rgba(111,134,255,.07);color:#33415e;font-size:13.5px;line-height:1.6;transition:.15s}
+.choice-btn:hover{background:rgba(111,134,255,.16);box-shadow:0 2px 10px rgba(111,134,255,.2)}
+.choice-btn b{color:#3f57c9}
+.typing{display:inline-flex;gap:5px;align-items:center;color:#8a6d2f;font-size:14px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--gold);animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.msg-error{align-self:stretch;background:rgba(226,87,76,.1);border:1px solid rgba(226,87,76,.5);
+  border-radius:12px;padding:14px 16px;color:#f3b6b0;font-size:13.5px;line-height:1.8}
+.msg-error .btn{margin-top:10px}
+
+/* SECTION: composer */
+.composer{flex-shrink:0;border-top:1px solid rgba(216,160,32,.28);background:rgba(12,15,32,.97);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+.composer-inner{width:min(820px,100%);margin:0 auto;display:flex;gap:10px;align-items:flex-end}
+#composer-input{flex:1;min-height:46px;max-height:150px;resize:none;line-height:1.55;border-radius:12px}
+#btn-send{height:46px;padding:0 26px;flex-shrink:0}
+.composer-tip{width:min(820px,100%);margin:6px auto 0;font-size:11.5px;color:var(--ink-faint);text-align:center;letter-spacing:.5px}
+#btn-stop{display:none}
+
+/* SECTION: drawer */
+.drawer-mask{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.25s;z-index:40}
+.drawer-mask.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(400px,94vw);background:var(--bg-1);
+  border-left:1px solid rgba(216,160,32,.35);transform:translateX(102%);transition:.25s;z-index:41;
+  display:flex;flex-direction:column}
+.drawer.open{transform:none}
+.drawer-head{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid rgba(216,160,32,.25)}
+.drawer-tabs{display:flex;gap:8px;flex:1}
+.drawer-tab{padding:7px 16px;border-radius:999px;border:1px solid transparent;background:none;color:var(--ink-dim);font-size:13.5px}
+.drawer-tab.on{border-color:rgba(216,160,32,.5);color:var(--gold-2);background:rgba(216,160,32,.08)}
+.drawer-body{flex:1;overflow-y:auto;padding:18px 16px}
+.kv{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px;line-height:1.7}
+.kv .k{flex-shrink:0;width:86px;color:var(--ink-faint)}
+.kv .v{color:var(--ink);white-space:pre-wrap;word-break:break-word}
+
+/* SECTION: modal */
+.modal-mask{position:fixed;inset:0;background:rgba(4,6,14,.72);display:none;align-items:center;justify-content:center;z-index:50;padding:18px}
+.modal-mask.open{display:flex}
+.modal{width:min(640px,100%);max-height:88dvh;overflow-y:auto;background:var(--bg-1);
+  border:1px solid rgba(216,160,32,.45);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.modal h3{font-family:var(--serif);color:var(--gold-2);font-size:19px;letter-spacing:3px;margin-bottom:14px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+#manual-prompt{font-size:12px;line-height:1.6;max-height:200px;overflow:auto;background:rgba(5,8,18,.8);
+  border:1px solid rgba(154,150,168,.3);border-radius:10px;padding:12px;color:#b8c4e8;white-space:pre-wrap;font-family:Consolas,monospace}
+.range-row{display:flex;align-items:center;gap:12px}
+.range-row input[type=range]{flex:1;padding:0;border:none;background:none}
+.range-row .val{width:52px;text-align:right;color:var(--gold-2);font-size:14px}
+
+/* SECTION: toast */
+#toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);opacity:0;
+  background:rgba(20,25,50,.96);border:1px solid rgba(216,160,32,.5);color:var(--gold-2);
+  padding:11px 24px;border-radius:999px;font-size:14px;z-index:60;transition:.25s;pointer-events:none;max-width:86vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%)}
+
+/* SECTION: responsive */
+@media (max-width:640px){
+  .row{flex-direction:column;gap:0}
+  .msg-ai{padding:14px 14px;font-size:15px}
+  .topbar{padding:8px 10px}
+  .topbar .brand{font-size:15px;letter-spacing:1px}
+  .chapter-badge{font-size:11.5px;padding:5px 10px}
+  #btn-send{padding:0 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- SECTION: view-intro -->
+<section id="view-intro" class="view active">
+  <div class="intro-sigil">✦</div>
+  <h1 class="intro-title">全职法师</h1>
+  <div class="intro-sub">原著同步 · 开放世界模拟器</div>
+  <p class="intro-desc" id="intro-desc">
+    以《全职法师》原著全文为唯一剧情主轴，创建你的原创法师，<br>
+    接入 AI，从水兰中学的升学雨幕开始，顺着原著章节一步步走进这个魔法为尊的世界。
+  </p>
+  <div class="intro-novel-card hidden" id="novel-gate">
+    <div class="gate-title">📖 尚未导入原著文本</div>
+    <p class="gate-desc">为保证版权合规，本页面不内置《全职法师》原文。<br>请选择你合法保存的原著 TXT 导入，文件仅保存在当前设备的浏览器中，不会上传到任何服务器。</p>
+    <button class="btn primary" id="btn-import-novel" data-primary-action>选择原著 TXT 导入</button>
+    <input type="file" id="novel-file" accept=".txt,text/plain" class="hidden">
+    <div class="gate-status" id="novel-import-status"></div>
+  </div>
+  <div class="intro-actions">
+    <button class="btn primary" id="btn-start" data-primary-action>✦ 创建角色，进入世界</button>
+    <button class="btn hidden" id="btn-continue">▶ 继续上次的模拟</button>
+    <button class="btn ghost" id="btn-goto-ai">⚙ AI 接入设置</button>
+  </div>
+  <div class="intro-meta" id="intro-meta">章节库加载中……</div>
+</section>
+
+<!-- SECTION: view-create -->
+<section id="view-create" class="view scroll-view">
+  <div class="scroll-inner">
+    <div class="page-head">
+      <h2>创建你的角色</h2>
+      <p>所有字段均可高度自定义，留空项将由模拟器在开局时自然补全</p>
+    </div>
+    <div class="form-card">
+      <div class="form-title">基础档案</div>
+      <div class="form-sub">姓名与性别是必填项，其余自由发挥</div>
+      <div class="row">
+        <div class="field">
+          <label>姓名 *</label>
+          <input id="c-name" maxlength="20" placeholder="例如：林晚舟">
+        </div>
+        <div class="field">
+          <label>年龄（故事开始时，默认 15 岁）</label>
+          <input id="c-age" type="number" min="12" max="40" value="15">
+        </div>
+      </div>
+      <div class="field">
+        <label>性别 *</label>
+        <div class="radio-row">
+          <label class="radio-pill"><input type="radio" name="c-gender" value="男" checked><span>男</span></label>
+          <label class="radio-pill"><input type="radio" name="c-gender" value="女"><span>女</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label>外貌</label>
+        <textarea id="c-look" placeholder="发型、瞳色、气质、穿着……例如：黑发微长，眼神安静，总穿洗得发白的校服"></textarea>
+        <div class="chips" id="chips-look"></div>
+      </div>
+      <div class="field">
+        <label>性格</label>
+        <textarea id="c-persona" placeholder="例如：表面温和，内心极度要强，记恩也记仇"></textarea>
+        <div class="chips" id="chips-persona"></div>
+      </div>
+      <div class="field">
+        <label>身世</label>
+        <textarea id="c-origin" placeholder="家庭、阶层、成长经历……例如：博城平民家庭，父亲是皮卡车司机，家境拮据"></textarea>
+        <div class="chips" id="chips-origin"></div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-title">魔法资质</div>
+      <div class="form-sub">初次觉醒系将在开学觉醒仪式上显现；天赋决定你的起点特色</div>
+      <div class="row">
+        <div class="field">
+          <label>初次觉醒魔法系</label>
+          <select id="c-element"></select>
+          <input id="c-element-custom" class="hidden" style="margin-top:8px" placeholder="自定义魔法系名称">
+        </div>
+        <div class="field">
+          <label>是否穿越者</label>
+          <select id="c-transmigrator">
+            <option value="否">否 · 这个世界的原住民</option>
+            <option value="是">是 · 带有对原著的模糊记忆（记忆可能有遗漏与偏差）</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>天生天赋</label>
+        <textarea id="c-talent" placeholder="例如：火元素亲和力极高，冥修速度是常人两倍"></textarea>
+        <div class="chips" id="chips-talent"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn ghost" id="btn-random">🎲 随机灵感</button>
+      <button class="btn primary" id="btn-enter" style="flex:1" data-primary-action>✦ 确认创建，进入全职法师世界</button>
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <button class="link-btn" id="btn-create-back">← 返回标题</button>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION: view-ai -->
+<section id="view-ai" class="view scroll-view">
+  <div class="scroll-inner">
+    <div class="page-head">
+      <h2>AI 接入设置</h2>
+      <p>模拟器本身不编造剧情，剧情完全由你接入的大模型按照模拟器规则生成</p>
+    </div>
+    <div class="form-card">
+      <div class="form-title">服务商</div>
+      <div class="form-sub">选择预设后自动填入接口地址与推荐模型，也可手动修改</div>
+      <div class="field">
+        <label>预设</label>
+        <select id="ai-provider">
+          <option value="deepseek">DeepSeek</option>
+          <option value="kimi">Kimi（月之暗面）</option>
+          <option value="zhipu">智谱 GLM</option>
+          <option value="openai">OpenAI 兼容 / 官方</option>
+          <option value="custom">自定义（任意 OpenAI 兼容接口）</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>接口地址 Base URL</label>
+        <input id="ai-url" placeholder="https://api.deepseek.com/v1">
+      </div>
+      <div class="row">
+        <div class="field" style="flex:2">
+          <label>API Key（仅保存在你本机浏览器）</label>
+          <input id="ai-key" type="password" placeholder="sk-...">
+        </div>
+        <div class="field">
+          <label>模型名</label>
+          <input id="ai-model" placeholder="deepseek-chat">
+        </div>
+      </div>
+      <div class="hint">要求：该服务支持浏览器跨域调用（CORS）。DeepSeek、Kimi、智谱等主流国产模型的官方接口均可在浏览器中直连。</div>
+    </div>
+    <div class="form-card">
+      <div class="form-title">生成参数</div>
+      <div class="field">
+        <label>创造力 temperature</label>
+        <div class="range-row"><input id="ai-temp" type="range" min="0" max="1.5" step="0.1" value="0.9"><span class="val" id="ai-temp-val">0.9</span></div>
+      </div>
+      <div class="field">
+        <label>单回合最大回复长度 max_tokens</label>
+        <input id="ai-max" type="number" min="500" max="8192" step="100" value="2000">
+      </div>
+      <div class="field">
+        <label>携带的上下文回合数（越大越连贯、消耗越多）</label>
+        <input id="ai-rounds" type="number" min="2" max="30" value="12">
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="form-title">手动粘贴模式</div>
+      <div class="form-sub">当你的模型不支持浏览器直连、或你想用网页版 AI（如官网对话框）时开启：模拟器会把组装好的完整提示词交给你复制，你把 AI 的回复粘贴回来，规则照常运行。</div>
+      <label class="radio-pill" style="display:inline-block">
+        <input type="checkbox" id="ai-manual" style="position:static;width:auto;opacity:1;pointer-events:auto"> <span>始终使用手动粘贴模式</span>
+      </label>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn" id="btn-test-conn">⚡ 测试连接</button>
+      <button class="btn primary" id="btn-ai-save" style="flex:1">保存设置</button>
+    </div>
+    <div class="hint" id="ai-test-result" style="margin-top:12px"></div>
+    <div style="text-align:center;margin-top:16px">
+      <button class="link-btn" id="btn-ai-back">← 返回</button>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION: view-main -->
+<section id="view-main" class="view">
+  <div class="topbar">
+    <span class="brand">全职法师</span>
+    <span class="chapter-badge" id="chapter-badge" title="点击跳转原著章节">第 1 章</span>
+    <span class="spacer"></span>
+    <button class="icon-btn" id="btn-drawer" title="角色卡 / 存档 / 帮助">☰</button>
+  </div>
+  <div class="cmd-row" id="cmd-row">
+    <button class="cmd-chip" data-cmd="面板">面板</button>
+    <button class="cmd-chip" data-cmd="任务">任务</button>
+    <button class="cmd-chip" data-cmd="回顾">回顾</button>
+    <button class="cmd-chip" data-cmd="提示">提示</button>
+    <button class="cmd-chip" data-cmd="画面">画面</button>
+    <button class="cmd-chip" data-cmd="快进">快进</button>
+    <button class="cmd-chip" data-cmd="__nextchapter">⏭ 下一章</button>
+    <button class="cmd-chip" data-cmd="__jump">⇢ 跳转章节</button>
+  </div>
+  <div id="stream"><div class="stream-inner" id="stream-inner"></div></div>
+  <div class="composer">
+    <div class="composer-inner">
+      <textarea id="composer-input" placeholder="输入你的行动或对话……（D 选项永远开放，任何合理行动皆可）"></textarea>
+      <button class="btn primary" id="btn-send" data-primary-action>行动</button>
+      <button class="btn danger" id="btn-stop">停止</button>
+    </div>
+    <div class="composer-tip">回车发送 · Shift+回车换行 · 剧情由 AI 依据《原著同步模拟器》规则与原著章节生成</div>
+  </div>
+</section>
+
+<!-- SECTION: drawer -->
+<div class="drawer-mask" id="drawer-mask"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="drawer-tabs">
+      <button class="drawer-tab on" data-tab="tab-char">角色卡</button>
+      <button class="drawer-tab" data-tab="tab-save">存档</button>
+      <button class="drawer-tab" data-tab="tab-help">规则</button>
+    </div>
+    <button class="icon-btn" id="btn-drawer-close">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div id="tab-char">
+      <div id="char-view"></div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn small" id="btn-edit-char">编辑角色卡</button>
+        <button class="btn small ghost" id="btn-ai-settings">AI 设置</button>
+      </div>
+      <div id="char-edit" class="hidden" style="margin-top:16px"></div>
+    </div>
+    <div id="tab-save" class="hidden">
+      <div class="kv"><span class="k">原著文本</span><span class="v" id="save-novel">检测中</span></div>
+      <div class="kv"><span class="k">原著位置</span><span class="v" id="save-pos">—</span></div>
+      <div class="kv"><span class="k">回合数</span><span class="v" id="save-turns">0</span></div>
+      <div class="kv"><span class="k">AI 模式</span><span class="v" id="save-ai">未配置</span></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
+        <button class="btn small" id="btn-export">⬇ 导出存档</button>
+        <button class="btn small ghost" id="btn-import">⬆ 导入存档</button>
+        <button class="btn small ghost" id="btn-reimport-novel">⬆ 导入 / 更换原著 TXT</button>
+        <button class="btn small danger hidden" id="btn-remove-novel">✕ 移除已导入原著</button>
+        <button class="btn small danger" id="btn-reset">✕ 重置全部存档</button>
+        <input type="file" id="import-file" accept=".json" class="hidden">
+      </div>
+      <div class="hint" style="margin-top:12px">存档保存在当前浏览器本地（localStorage），清除浏览器数据会丢失，建议定期导出备份。</div>
+    </div>
+    <div id="tab-help" class="hidden">
+      <div class="hint" style="font-size:13.5px;color:var(--ink-dim);line-height:2">
+        · 模拟器以你提供的《全职法师原著同步模拟器》规则为最高准则，沿原著章节顺序推进，每回合输出正文、【本轮变化】与【你的选择】。<br>
+        · 快捷指令：面板 / 任务 / 回顾 / 提示 / 画面 / 快进，均来自规则第 11、22 节。<br>
+        · 「下一章」用于在 AI 提示本章剧情结束后手动推进原著位置；「跳转章节」可强制同步到任意原著章节。<br>
+        · 硬锚点剧情不会被玩家行为随意改写；重大因果分歧会触发规则中的确认流程。<br>
+        · 原著文本：内置版随页面附带；公开版需自行导入合法获得的 TXT，文件仅保存在本机浏览器中，不会上传服务器。
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- SECTION: modal-chapter -->
+<div class="modal-mask" id="modal-chapter">
+  <div class="modal">
+    <h3>原著章节同步</h3>
+    <div class="kv"><span class="k">当前位置</span><span class="v" id="chap-cur">—</span></div>
+    <div class="field" style="margin-top:14px">
+      <label>跳转到章节号（1 起）</label>
+      <input id="chap-input" type="number" min="1">
+    </div>
+    <div class="hint" id="chap-target-preview"></div>
+    <div class="modal-actions">
+      <button class="btn ghost small" id="chap-prev">← 上一章</button>
+      <button class="btn ghost small" id="chap-next">下一章 →</button>
+      <button class="btn small" id="chap-go">跳转</button>
+      <button class="btn ghost small" id="chap-close">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: modal-manual -->
+<div class="modal-mask" id="modal-manual">
+  <div class="modal">
+    <h3>手动粘贴模式</h3>
+    <div class="hint">第一步：复制下面组装好的完整提示词（已包含模拟器规则、角色卡、当前原著章节与近况），粘贴给你想使用的任意 AI。</div>
+    <div id="manual-prompt"></div>
+    <div style="margin-top:10px"><button class="btn small" id="btn-copy-prompt">📋 复制提示词</button></div>
+    <div class="field" style="margin-top:16px">
+      <label>第二步：把 AI 的完整回复粘贴到这里</label>
+      <textarea id="manual-reply" style="min-height:140px" placeholder="粘贴 AI 回复……"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost small" id="btn-manual-cancel">取消</button>
+      <button class="btn primary small" id="btn-manual-confirm">确认，写入剧情</button>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: modal-confirm -->
+<div class="modal-mask" id="modal-confirm">
+  <div class="modal" style="width:min(420px,100%)">
+    <h3 id="confirm-title">确认</h3>
+    <p id="confirm-text" style="font-size:14px;color:var(--ink-dim);line-height:1.8"></p>
+    <div class="modal-actions">
+      <button class="btn ghost small" id="confirm-no">取消</button>
+      <button class="btn danger small" id="confirm-yes">确认</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="assets/novel-system.js"></script>
+<script>
+"use strict";
+/* SECTION: js-state */
+const LS_KEY='ff_sim_save_v1';
+const App={
+  novel: window.__NOVEL_TXT__||'',
+  rules: window.__SIM_RULES__||'',
+  index:null, state:null, abort:null, streaming:false, editing:false
+};
+
+/* SECTION: js-util */
+function $(id){return document.getElementById(id);}
+let _toastH=0;
+function toast(msg,ms){ms=ms||2600;const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(_toastH);_toastH=setTimeout(function(){t.classList.remove('show');},ms);}
+function showView(id){
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  $(id).classList.add('active');
+}
+function openModal(id){$(id).classList.add('open');}
+function closeModal(id){$(id).classList.remove('open');}
+
+/* SECTION: js-novel-store */
+const NOVEL_DB='ff_novel_db',NOVEL_STORE='novel',NOVEL_KEY='primary';
+let _importedMeta=null;
+function idbOpen(){return new Promise(function(res,rej){const r=indexedDB.open(NOVEL_DB,1);r.onupgradeneeded=function(){r.result.createObjectStore(NOVEL_STORE);};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};});}
+function idbGet(){return idbOpen().then(function(db){return new Promise(function(res,rej){const t=db.transaction(NOVEL_STORE,'readonly');const q=t.objectStore(NOVEL_STORE).get(NOVEL_KEY);q.onsuccess=function(){res(q.result||null);};q.onerror=function(){rej(q.error);};});});}
+function idbSet(text,fileName){return idbOpen().then(function(db){return new Promise(function(res,rej){const t=db.transaction(NOVEL_STORE,'readwrite');t.objectStore(NOVEL_STORE).put({text:text,fileName:fileName},NOVEL_KEY);t.oncomplete=function(){res(true);};t.onerror=function(){rej(t.error);};});});}
+function idbDelete(){return idbOpen().then(function(db){return new Promise(function(res,rej){const t=db.transaction(NOVEL_STORE,'readwrite');t.objectStore(NOVEL_STORE).delete(NOVEL_KEY);t.oncomplete=function(){res(true);};t.onerror=function(){rej(t.error);};});});}
+function applyNovelText(text){
+  if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
+  text=text.replace(/\r\n/g,'\n');
+  App.novel=text;
+  App.index=null;
+  buildIndex();
+  if(App.state&&App.state.chapter>App.index.length){App.state.chapter=1;saveState();}
+  updateNovelUI();
+  updateChapterBadge();
+}
+function updateNovelUI(){
+  const has=!!App.novel;
+  const total=App.index?App.index.length:0;
+  const gate=$('novel-gate');
+  if(has){
+    gate.classList.add('hidden');
+    $('btn-start').disabled=false;
+    $('btn-continue').disabled=false;
+    $('intro-meta').textContent=_importedMeta?('已导入原著（'+_importedMeta.fileName+'，'+total+' 章）｜ 模拟器规则已就绪 ｜ 存档保存在当前浏览器'):('内置原著 '+total+' 章 ｜ 模拟器规则已就绪 ｜ 存档保存在当前浏览器');
+    $('save-novel').textContent=_importedMeta?('已导入：'+_importedMeta.fileName+'（'+total+' 章）'):'内置全文（'+total+' 章）';
+    $('btn-remove-novel').classList.toggle('hidden',!_importedMeta);
+  }else{
+    gate.classList.remove('hidden');
+    $('btn-start').disabled=true;
+    $('btn-continue').disabled=true;
+    $('intro-meta').textContent='导入原著 TXT 后即可开始 ｜ 模拟器规则已就绪 ｜ 存档保存在当前浏览器';
+    $('save-novel').textContent='未导入';
+    $('btn-remove-novel').classList.add('hidden');
+  }
+}
+async function loadStoredNovel(){
+  if(App.novel){updateNovelUI();return;}
+  try{
+    const rec=await idbGet();
+    if(rec&&rec.text){_importedMeta={fileName:rec.fileName||'已导入文本'};applyNovelText(rec.text);}
+    else updateNovelUI();
+  }catch(e){updateNovelUI();}
+}
+function handleNovelFile(file){
+  const status=$('novel-import-status');
+  status.textContent='读取中…（'+(Math.round(file.size/104857.6)/10)+' MB）';
+  const fr=new FileReader();
+  fr.onload=function(){
+    let text=fr.result||'';
+    if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
+    const re=/^第[0-9一二三四五六七八九十百千零〇两]+章[^\r\n]*/gm;
+    const m=text.match(re);
+    const chapters=m?m.length:0;
+    if(chapters<10){
+      status.textContent='⚠ 仅检测到 '+chapters+' 个「第N章」标题，疑似不是章节完整的原著文本，已取消导入';
+      return;
+    }
+    idbSet(text,file.name).then(function(){
+      _importedMeta={fileName:file.name};
+      applyNovelText(text);
+      status.textContent='';
+      toast('原著导入成功：'+chapters+' 章');
+    }).catch(function(err){
+      const msg='保存失败（浏览器本地存储空间可能不足）：'+(err&&err.message?err.message:'未知错误');
+      status.textContent='⚠ '+msg;
+      toast(msg,4000);
+    });
+  };
+  fr.onerror=function(){status.textContent='⚠ 文件读取失败，请重试';};
+  fr.readAsText(file,'utf-8');
+}
+
+/* SECTION: js-novel */
+function buildIndex(){
+  if(App.index) return App.index;
+  const text=App.novel, re=/^第([0-9一二三四五六七八九十百千零〇两]+)章[^\r\n]*/gm;
+  let m; const marks=[];
+  while((m=re.exec(text))){marks.push({start:m.index,end:m.index+m[0].length,title:m[0].trim()});}
+  const idx=[];
+  for(let i=0;i<marks.length;i++){
+    const nextStart=(i+1<marks.length)?marks[i+1].start:text.length;
+    idx.push({title:marks[i].title,body:text.slice(marks[i].end,nextStart).trim()});
+  }
+  App.index=idx;
+  return idx;
+}
+function chapterAt(n){const idx=buildIndex();return idx[n-1]||null;}
+function chapterTitle(n){const c=chapterAt(n);return c?c.title:('第'+n+'章');}
+function updateChapterBadge(){
+  if(!App.state) return;
+  $('chapter-badge').textContent=chapterTitle(App.state.chapter)+' ｜ '+App.state.chapter+'/'+buildIndex().length;
+}
+
+/* SECTION: js-persist */
+function defaultAI(){return{provider:'deepseek',url:'https://api.deepseek.com/v1',model:'deepseek-chat',key:'',temperature:0.9,maxTokens:2000,rounds:12,manual:false,connected:false};}
+function defaultState(){return{character:null,ai:defaultAI(),history:[],chapter:1,turn:0,started:false,lastSaved:0};}
+function loadState(){
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(raw){const s=JSON.parse(raw);const d=defaultState();s.ai=Object.assign(defaultAI(),s.ai||{});return Object.assign(d,s);}
+  }catch(e){}
+  return defaultState();
+}
+function saveState(){
+  if(!App.state) return;
+  App.state.lastSaved=Date.now();
+  try{localStorage.setItem(LS_KEY,JSON.stringify(App.state));}
+  catch(e){toast('本地存储已满，请在侧边栏导出存档后重置');}
+}
+
+/* SECTION: js-providers */
+const PROVIDERS={
+  deepseek:{label:'DeepSeek',url:'https://api.deepseek.com/v1',model:'deepseek-chat'},
+  kimi:{label:'Kimi（月之暗面）',url:'https://api.moonshot.cn/v1',model:'moonshot-v1-32k'},
+  zhipu:{label:'智谱 GLM',url:'https://open.bigmodel.cn/api/paas/v4',model:'glm-4-flash'},
+  openai:{label:'OpenAI',url:'https://api.openai.com/v1',model:'gpt-4o-mini'},
+  custom:{label:'自定义',url:'',model:''}
+};
+function providerLabel(){const p=PROVIDERS[App.state.ai.provider];return p?p.label:'自定义';}
+
+/* SECTION: js-charform */
+const ELEMENTS=['随机（由觉醒仪式自然决定）','火系','雷系','水系','冰系','风系','土系','光系','治愈系','植物系','心灵系','祝福系','暗影系','诅咒系','亡灵系','毒系','空间系','召唤系','音系','混沌系','自定义（规则第10节数据库之外）'];
+const LOOK_CHIPS=['黑发微长，眼神安静','银灰短发，气质清冷','高大结实，笑起来很爽朗','个子不高，眼睛特别亮','总穿洗得发白的旧校服'];
+const PERSONA_CHIPS=['温和谨慎，记恩也记仇','热血直率，极重义气','冷静克制，野心藏在心底','嘴贫爱占口头便宜，关键时刻靠得住','坚韧不服输，越挫越勇'];
+const ORIGIN_CHIPS=['博城平民家庭，家境拮据','世家旁支，受家族冷眼','军法师遗孤，由亲戚抚养','猎者家庭出身，从小见过血','普通工薪家庭，靠奖学金读书'];
+const TALENT_CHIPS=['星子掌控速度远超同龄人','天生魔能容量比常人深厚三成','对某一元素亲和极高，施法异常稳定','精神力敏锐，能察觉他人情绪波动','体魄强健，反应速度不输同阶法师'];
+const NAMES_M=['林晚舟','陆沉','顾星野','沈惊蛰','江燃','程砚','许惊澜'];
+const NAMES_F=['苏念安','温以宁','姜晚','黎昭','宋拾月','白鹿鸣','陈星眠'];
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function fillElementSelect(){
+  const sel=$('c-element');
+  sel.innerHTML='';
+  ELEMENTS.forEach(function(v){const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o);});
+  sel.addEventListener('change',function(){$('c-element-custom').classList.toggle('hidden',sel.value.indexOf('自定义')!==0);});
+}
+function bindChips(chipId,taId){
+  $(chipId).addEventListener('click',function(e){
+    if(!e.target.classList.contains('chip')) return;
+    const ta=$(taId), v=e.target.textContent;
+    ta.value=ta.value?ta.value.replace(/\s*$/,'')+'；'+v:v;
+  });
+}
+function fillChips(containerId,chips){
+  const c=$(containerId);c.innerHTML='';
+  chips.forEach(function(t){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=t;c.appendChild(b);});
+}
+function readCharForm(){
+  let element=$('c-element').value;
+  if(element.indexOf('自定义')===0){element=$('c-element-custom').value.trim()||'未定（自填）';}
+  return {
+    name:$('c-name').value.trim(),
+    gender:(document.querySelector('input[name="c-gender"]:checked')||{}).value||'男',
+    age:$('c-age').value.trim()||'15',
+    look:$('c-look').value.trim(),
+    persona:$('c-persona').value.trim(),
+    origin:$('c-origin').value.trim(),
+    element:element,
+    talent:$('c-talent').value.trim(),
+    transmigrator:$('c-transmigrator').value
+  };
+}
+function fillCharForm(c){
+  if(!c) return;
+  $('c-name').value=c.name||'';
+  const g=document.querySelector('input[name="c-gender"][value="'+(c.gender||'男')+'"]');
+  if(g) g.checked=true;
+  $('c-age').value=c.age||'15';
+  $('c-look').value=c.look||'';
+  $('c-persona').value=c.persona||'';
+  $('c-origin').value=c.origin||'';
+  const sel=$('c-element');
+  if(ELEMENTS.indexOf(c.element)>=0){sel.value=c.element;$('c-element-custom').classList.add('hidden');}
+  else{sel.value='自定义（规则第10节数据库之外）';$('c-element-custom').classList.remove('hidden');$('c-element-custom').value=c.element||'';}
+  $('c-talent').value=c.talent||'';
+  $('c-transmigrator').value=c.transmigrator||'否';
+}
+function randomInspire(){
+  const gender=Math.random()<0.5?'男':'女';
+  const g=document.querySelector('input[name="c-gender"][value="'+gender+'"]');
+  if(g) g.checked=true;
+  if(!$('c-name').value.trim()) $('c-name').value=gender==='男'?pick(NAMES_M):pick(NAMES_F);
+  if(!$('c-look').value.trim()) $('c-look').value=pick(LOOK_CHIPS);
+  if(!$('c-persona').value.trim()) $('c-persona').value=pick(PERSONA_CHIPS);
+  if(!$('c-origin').value.trim()) $('c-origin').value=pick(ORIGIN_CHIPS);
+  if(!$('c-talent').value.trim()) $('c-talent').value=pick(TALENT_CHIPS);
+  toast('已生成随机灵感，可继续修改');
+}
+/* SECTION: js-prompt */
+const WEB_ADAPT='\n【网页接入补充说明】本模拟器运行于网页端，请遵守以下展示替换，其余规则全部原样有效：\n1. 面板、任务、提示不使用 LaTeX，改为紧凑的结构化纯文本（保持金色边框般的分区标题与层次，如「『全职法师·角色面板』」「〔玩家档案〕」），字段与规则第 5、22、17 节一致。\n2. 对话引用用「> **角色名：** “……”」格式。\n3. 每回合仍必须输出约 300—500 汉字正文、【本轮变化】与四项【你的选择】；选项必须写成「A. 【顺势】……」四行独立行，便于点选。\n4. 当前原著章节的原文已在下方提供，请以它为准，不要从记忆中复述原著。';
+function characterText(c){
+  if(!c) return '（尚未创建角色）';
+  return '姓名：'+(c.name||'未定')+'｜性别：'+(c.gender||'未定')+'｜年龄：'+(c.age||'15')+'岁\n'+
+    '外貌：'+(c.look||'未设定')+'\n性格：'+(c.persona||'未设定')+'\n身世：'+(c.origin||'未设定')+'\n'+
+    '初次觉醒魔法系：'+(c.element||'未设定')+'\n天生天赋：'+(c.talent||'未设定')+'\n'+
+    '是否穿越者：'+(c.transmigrator||'否');
+}
+function currentChapterText(){
+  const c=chapterAt(App.state.chapter);
+  if(!c) return '（章节不存在）';
+  let body=c.body;
+  if(body.length>4200) body=body.slice(0,4200)+'\n（本章原文过长，已截断展示，请向玩家说明后续内容将随推进逐段给出）';
+  return '【当前原著位置】'+c.title+'\n【章节原文】\n'+body;
+}
+function historyText(){
+  const rounds=App.state.ai.rounds||12;
+  const turns=App.state.history.slice(-rounds*2);
+  if(!turns.length) return '（这是第一回合）';
+  let out='【近况对话（由近及远，共'+turns.length+'条）】\n';
+  turns.forEach(function(t){
+    if(t.role==='user') out+='玩家：'+t.content+'\n';
+    else{
+      let c=t.content;
+      if(c.length>1500) c=c.slice(0,1500)+'……（已截断）';
+      out+='模拟器：'+c+'\n';
+    }
+  });
+  return out;
+}
+function buildMessages(userText){
+  const system=App.rules+WEB_ADAPT;
+  const context='【玩家角色卡】\n'+characterText(App.state.character)+'\n\n'+currentChapterText()+'\n\n'+historyText();
+  const messages=[
+    {role:'system',content:system},
+    {role:'user',content:'以下是本轮同步的角色档案、当前原著章节与近况，请将其作为剧情依据：\n'+context},
+    {role:'assistant',content:'已同步。我将严格执行《全职法师原著同步模拟器》全部规则：正文 300—500 字、末尾附【本轮变化】与四项【你的选择】，不替玩家做重大选择，不剧透，按原著章节顺序推进。请继续。'},
+    {role:'user',content:userText}
+  ];
+  return messages;
+}
+function openingUserText(){
+  const c=App.state.character;
+  return '【开局】我已完成角色创建，角色卡如下：\n'+characterText(c)+'\n\n请按规则第 11 节，从原著第 1 章的正确时间位置开始正式模拟。';
+}
+
+/* SECTION: js-aicall */
+function buildPayload(messages,stream){
+  const ai=App.state.ai;
+  return {model:ai.model,messages:messages,stream:!!stream,temperature:Number(ai.temperature)||0.9,max_tokens:Number(ai.maxTokens)||2000};
+}
+async function streamAI(messages,onDelta,onDone,onErr){
+  const ai=App.state.ai;
+  const url=ai.url.replace(/\/+$/,'')+'/chat/completions';
+  App.abort=new AbortController();
+  let resp;
+  try{
+    resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ai.key},
+      body:JSON.stringify(buildPayload(messages,true)),signal:App.abort.signal});
+  }catch(e){
+    if(e.name==='AbortError'){onDone('');return;}
+    onErr('无法连接接口：'+e.message+'\n可能原因：网络问题、该服务商不支持浏览器跨域调用（CORS），或接口地址错误。\n你可以在 AI 设置中检查配置，或直接使用「手动粘贴模式」。');
+    return;
+  }
+  if(!resp.ok){
+    let detail='';
+    try{const t=await resp.text();detail=t.slice(0,300);}catch(e2){}
+    onErr('接口返回错误 '+resp.status+'：'+(detail||'未知原因')+'\n请检查 API Key、模型名是否正确，或改用「手动粘贴模式」。');
+    return;
+  }
+  const reader=resp.body.getReader();
+  const dec=new TextDecoder('utf-8');
+  let buf='',full='';
+  for(;;){
+    let r;
+    try{r=await reader.read();}catch(e){onErr('读取中断：'+e.message);return;}
+    if(r.done) break;
+    buf+=dec.decode(r.value,{stream:true});
+    let pos;
+    while((pos=buf.indexOf('\n'))>=0){
+      const line=buf.slice(0,pos).trim();
+      buf=buf.slice(pos+1);
+      if(!line||line.indexOf('data:')!==0) continue;
+      const data=line.slice(5).trim();
+      if(data==='[DONE]') continue;
+      try{
+        const j=JSON.parse(data);
+        const d=j.choices&&j.choices[0]&&j.choices[0].delta&&j.choices[0].delta.content;
+        if(d){full+=d;onDelta(full);}
+      }catch(e){}
+    }
+  }
+  onDone(full);
+}
+async function testConnection(){
+  const ai=App.state.ai;
+  const url=ai.url.replace(/\/+$/,'')+'/chat/completions';
+  try{
+    const resp=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ai.key},
+      body:JSON.stringify({model:ai.model,messages:[{role:'user',content:'回复：连接成功'}],max_tokens:20})});
+    if(resp.ok){
+      const j=await resp.json().catch(function(){return null;});
+      const ok=j&&j.choices&&j.choices[0];
+      return ok?{ok:true}:{ok:false,msg:'接口可连通，但返回格式异常'};
+    }
+    let detail='';try{detail=(await resp.text()).slice(0,200);}catch(e){}
+    return {ok:false,msg:'HTTP '+resp.status+'：'+detail};
+  }catch(e){
+    return {ok:false,msg:e.message+'（若提示 CORS/Failed to fetch，多为该接口不支持浏览器直连，可改用手动粘贴模式）'};
+  }
+}
+
+/* SECTION: js-start */
+function createAndEnter(){
+  const c=readCharForm();
+  if(!c.name){toast('请填写角色姓名');$('c-name').focus();return;}
+  App.state.character=c;
+  App.state.chapter=1;
+  App.state.started=true;
+  saveState();
+  renderStream();
+  showView('view-main');
+  updateChapterBadge();
+  toast('角色已创建，正在同步原著第 1 章……');
+  if(!App.state.ai.manual) sendTurn(openingUserText(),true);
+  else{
+    const d=document.createElement('div');
+    d.className='msg msg-note';
+    d.textContent='当前为手动粘贴模式：点击下方按钮生成开局提示词，复制给你的 AI，再把回复粘贴回来';
+    const b=document.createElement('button');
+    b.className='btn primary small';b.type='button';
+    b.style.margin='10px auto 0';
+    b.textContent='✦ 生成开局提示词';
+    b.addEventListener('click',function(){d.remove();openManual(openingUserText());});
+    d.appendChild(document.createElement('br'));
+    d.appendChild(b);
+    $('stream-inner').appendChild(d);
+  }
+}
+/* SECTION: js-turn */
+function setBusy(busy){
+  App.streaming=busy;
+  $('btn-send').disabled=busy;
+  $('btn-stop').style.display=busy?'inline-flex':'none';
+  $('btn-send').textContent=busy?'生成中…':'行动';
+  document.querySelectorAll('.cmd-chip').forEach(function(b){b.disabled=busy;});
+}
+function sendTurn(userText,isOpening){
+  if(App.streaming) return;
+  if(App.state.ai.manual){openManual(userText);return;}
+  if(!App.state.ai.key){toast('尚未配置 AI，请先在「AI 接入设置」填写接口');showView('view-ai');fillAIForm();return;}
+  pushUser(userText);
+  saveState();
+  setBusy(true);
+  const aiDiv=appendAIPlaceholder();
+  const messages=buildMessages(userText);
+  streamAI(messages,
+    function(partial){renderAIText(aiDiv,partial);scrollStream();},
+    function(full){
+      setBusy(false);
+      if(full&&full.trim()){finalizeAI(aiDiv,full);}
+      else if(!aiDiv.dataset.finalized){aiDiv.remove();toast('已停止');}
+    },
+    function(msg){
+      setBusy(false);
+      aiDiv.remove();
+      const hist=App.state.history;
+      if(hist.length&&hist[hist.length-1].role==='user'&&hist[hist.length-1].content===userText) hist.pop();
+      saveState();
+      if(!$('composer-input').value.trim()) $('composer-input').value=userText;
+      appendError(msg,userText);
+    }
+  );
+}
+function finalizeAI(aiDiv,text){
+  if(aiDiv.dataset.finalized) return;
+  aiDiv.dataset.finalized='1';
+  renderAIText(aiDiv,text);
+  App.state.history.push({role:'assistant',content:text});
+  App.state.turn++;
+  saveState();
+  scrollStream();
+}
+
+/* SECTION: js-render-text */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function inline(s){return esc(s).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');}
+function classifyHead(t){
+  if(t.indexOf('本轮变化')>=0) return 'sec-change';
+  if(t.indexOf('你的选择')>=0) return 'sec-choice';
+  if(t.indexOf('重大因果分歧确认')>=0) return 'sec-danger';
+  if(t.indexOf('城市动态')>=0) return 'sec-city';
+  return 'sec-generic';
+}
+function lineClass(line){
+  if(/^\s*(>|\|)/.test(line)) return null;
+  if(/^\s*【[^】]{1,14}】\s*$/.test(line)) return {head:true,text:line.trim()};
+  if(/^[A-D][\.．、]\s*【/.test(line)) return {choice:true,text:line.trim()};
+  if(/^\s*[-•·]\s/.test(line)) return {bullet:true,text:line.trim()};
+  return {para:true,text:line};
+}
+function renderAIText(div,text){
+  div.innerHTML=richToHtml(text);
+  div.dataset.raw=text;
+  addChoiceButtons(div,text);
+}
+function richToHtml(text){
+  const lines=text.split('\n');
+  let html='',para=[],quote=[],choiceMode=false;
+  function flushPara(){if(para.length){html+='<p>'+para.map(inline).join('<br>')+'</p>';para=[];}}
+  function flushQuote(){if(quote.length){html+='<blockquote>'+quote.join('')+'</blockquote>';quote=[];}}
+  for(let i=0;i<lines.length;i++){
+    const raw=lines[i];
+    const line=raw.replace(/\s+$/,'');
+    const cls=lineClass(line);
+    if(!line.trim()){flushPara();flushQuote();continue;}
+    if(line.trim().indexOf('>')===0){
+      flushPara();
+      const t=line.trim().replace(/^>\s*/,'');
+      if(t) quote.push('<p>'+inline(t)+'</p>');
+      continue;
+    }
+    flushQuote();
+    if(cls.head){
+      flushPara();choiceMode=cls.text.indexOf('你的选择')>=0;
+      html+='<div class="ai-section-head '+classifyHead(cls.text)+'">'+inline(cls.text)+'</div>';
+      continue;
+    }
+    if(cls.choice){
+      flushPara();
+      html+='<div class="choice-list"><div class="choice-btn" data-choice="'+esc(cls.text)+'">'+inline(cls.text)+'</div></div>';
+      continue;
+    }
+    if(cls.bullet&&choiceMode){
+      flushPara();
+      html+='<div class="choice-list"><div class="choice-btn" data-choice="'+esc(cls.text)+'">'+inline(cls.text)+'</div></div>';
+      continue;
+    }
+    if(cls.bullet){flushPara();html+='<p style="padding-left:14px">'+inline(cls.text)+'</p>';continue;}
+    para.push(cls.text||line.trim());
+  }
+  flushPara();flushQuote();
+  return html;
+}
+function addChoiceButtons(div,text){
+  const matches=text.match(/^[A-D][\.．、]\s*【[^】]*】.*$/gm);
+  if(!matches) return;
+  if(div.querySelector('.choice-list')) return;
+  const list=document.createElement('div');
+  list.className='choice-list';
+  matches.forEach(function(m){
+    const b=document.createElement('button');
+    b.className='choice-btn';b.type='button';
+    b.dataset.choice=m.trim();
+    b.innerHTML=inline(m.trim());
+    list.appendChild(b);
+  });
+  div.appendChild(list);
+}
+
+/* SECTION: js-stream-ui */
+function scrollStream(){const s=$('stream');s.scrollTop=s.scrollHeight;}
+function pushUser(text){
+  App.state.history.push({role:'user',content:text});
+  const inner=$('stream-inner');
+  const last=inner.lastElementChild;
+  if(!(last&&last.classList.contains('msg-user')&&last.textContent===text)) appendUser(text);
+  scrollStream();
+}
+function appendUser(text){
+  const d=document.createElement('div');
+  d.className='msg msg-user';
+  d.textContent=text;
+  $('stream-inner').appendChild(d);
+}
+function appendAIPlaceholder(){
+  const d=document.createElement('div');
+  d.className='msg msg-ai';
+  d.innerHTML='<span class="typing"><i></i><i></i><i></i></span>';
+  $('stream-inner').appendChild(d);
+  scrollStream();
+  return d;
+}
+function appendNote(text){
+  const d=document.createElement('div');
+  d.className='msg msg-note';
+  d.textContent=text;
+  $('stream-inner').appendChild(d);
+}
+function appendError(msg,userText){
+  const d=document.createElement('div');
+  d.className='msg msg-error';
+  d.innerHTML='<b>⚠ 请求失败</b><br>'+esc(msg)+'<br>'+
+    '<button class="btn small" data-act="manual">改用手动粘贴模式重试</button> '+
+    '<button class="btn small ghost" data-act="aisettings">检查 AI 设置</button>';
+  d.querySelector('[data-act="manual"]').addEventListener('click',function(){App.state.ai.manual=true;$('ai-manual').checked=true;saveState();openManual(userText);});
+  d.querySelector('[data-act="aisettings"]').addEventListener('click',function(){fillAIForm();showView('view-ai');});
+  $('stream-inner').appendChild(d);
+  scrollStream();
+}
+function renderStream(){
+  const inner=$('stream-inner');
+  inner.innerHTML='';
+  const st=App.state;
+  if(!st.character) return;
+  appendNote('『'+st.character.name+'』的角色档案已就绪，原著位置：'+chapterTitle(st.chapter));
+  st.history.forEach(function(t){
+    if(t.role==='user') appendUser(t.content);
+    else{
+      const d=document.createElement('div');
+      d.className='msg msg-ai';
+      d.dataset.finalized='1';
+      renderAIText(d,t.content);
+      inner.appendChild(d);
+    }
+  });
+  if(!st.history.length){
+    appendNote('开局指令已准备，发送你的第一个行动，或点「行动」让模拟器按规则开场');
+    if(App.state.ai.manual){
+      const b=document.createElement('button');
+      b.className='btn primary small';b.type='button';
+      b.style.alignSelf='center';
+      b.textContent='✦ 生成开局提示词';
+      b.addEventListener('click',function(){b.remove();openManual(openingUserText());});
+      $('stream-inner').appendChild(b);
+    }
+  }
+  scrollStream();
+}
+
+/* SECTION: js-manual */
+let _pendingUser='';
+function openManual(userText){
+  _pendingUser=userText||'';
+  if(_pendingUser){
+    const hist=App.state.history;
+    const last=hist.length?hist[hist.length-1]:null;
+    if(!(last&&last.role==='user'&&last.content===_pendingUser)) pushUser(_pendingUser);
+  }
+  saveState();
+  const messages=buildMessages(_pendingUser);
+  let txt='【系统规则】\n'+messages[0].content+'\n\n【上下文】\n'+messages[1].content+'\n\n【你的当前输入】\n'+messages[3].content;
+  $('manual-prompt').textContent=txt;
+  $('manual-reply').value='';
+  openModal('modal-manual');
+}
+function confirmManual(){
+  const reply=$('manual-reply').value.trim();
+  if(!reply){toast('请先粘贴 AI 的回复');return;}
+  closeModal('modal-manual');
+  const d=appendAIPlaceholder();
+  d.innerHTML='';
+  renderAIText(d,reply);
+  finalizeAI(d,reply);
+  toast('已写入剧情');
+}
+
+/* SECTION: js-chapter-modal */
+function openChapterModal(){
+  $('chap-cur').textContent=chapterTitle(App.state.chapter);
+  $('chap-input').value=App.state.chapter;
+  $('chap-input').max=buildIndex().length;
+  previewChapter(App.state.chapter);
+  openModal('modal-chapter');
+}
+function previewChapter(n){
+  n=parseInt(n,10);
+  const c=chapterAt(n);
+  $('chap-target-preview').textContent=c?('预览：'+c.title+' ｜ 本章约 '+c.body.length+' 字'):'超出范围（共 '+buildIndex().length+' 章）';
+}
+function applyChapter(n,silent){
+  const idx=buildIndex();
+  if(!chapterAt(n)){toast('超出范围（1—'+idx.length+'）');return;}
+  App.state.chapter=n;
+  saveState();
+  updateChapterBadge();
+  if(!silent){appendNote('📖 原著位置已同步：'+chapterTitle(n)+'（后续回合将以此章节为剧情主轴）');scrollStream();}
+}
+
+/* SECTION: js-drawer */
+function renderCharView(){
+  const c=App.state.character;
+  if(!c){$('char-view').innerHTML='<div class="hint">尚未创建角色</div>';return;}
+  const rows=[['姓名',c.name],['性别',c.gender],['年龄',c.age+' 岁'],['外貌',c.look||'未设定'],['性格',c.persona||'未设定'],['身世',c.origin||'未设定'],['觉醒系',c.element||'未设定'],['天生天赋',c.talent||'未设定'],['穿越者',c.transmigrator||'否']];
+  $('char-view').innerHTML=rows.map(function(r){return '<div class="kv"><span class="k">'+r[0]+'</span><span class="v">'+esc(String(r[1]))+'</span></div>';}).join('');
+}
+function renderSaveTab(){
+  const st=App.state;
+  $('save-pos').textContent=chapterTitle(st.chapter)+'（'+st.chapter+'/'+buildIndex().length+'）';
+  $('save-turns').textContent=String(st.turn);
+  $('save-ai').textContent=st.ai.manual?'手动粘贴模式':(st.ai.connected?providerLabel()+' · '+st.ai.model+'（已测连）':(st.ai.key?providerLabel()+' · '+st.ai.model:('未配置')));
+}
+function openDrawer(){renderCharView();renderSaveTab();$('drawer').classList.add('open');$('drawer-mask').classList.add('open');}
+function closeDrawer(){$('drawer').classList.remove('open');$('drawer-mask').classList.remove('open');}
+
+/* SECTION: js-ai-form */
+function fillAIForm(){
+  const ai=App.state.ai;
+  $('ai-provider').value=ai.provider||'custom';
+  $('ai-url').value=ai.url;
+  $('ai-key').value=ai.key;
+  $('ai-model').value=ai.model;
+  $('ai-temp').value=ai.temperature;
+  $('ai-temp-val').textContent=String(ai.temperature);
+  $('ai-max').value=ai.maxTokens;
+  $('ai-rounds').value=ai.rounds;
+  $('ai-manual').checked=!!ai.manual;
+}
+function readAIForm(){
+  const ai=App.state.ai;
+  ai.provider=$('ai-provider').value;
+  ai.url=$('ai-url').value.trim();
+  ai.key=$('ai-key').value.trim();
+  ai.model=$('ai-model').value.trim();
+  ai.temperature=parseFloat($('ai-temp').value)||0.9;
+  ai.maxTokens=parseInt($('ai-max').value,10)||2000;
+  ai.rounds=Math.max(2,parseInt($('ai-rounds').value,10)||12);
+  ai.manual=$('ai-manual').checked;
+}
+
+/* SECTION: js-confirm */
+let _confirmCb=null;
+function confirmDialog(title,text,cb){
+  $('confirm-title').textContent=title;
+  $('confirm-text').textContent=text;
+  _confirmCb=cb;
+  openModal('modal-confirm');
+}
+
+/* SECTION: js-init */
+function init(){
+  buildIndex();
+  App.state=loadState();
+  loadStoredNovel();
+  if(App.state.started&&App.state.character){
+    $('btn-continue').classList.remove('hidden');
+    $('btn-start').textContent='✦ 重新创建角色';
+  }
+  fillElementSelect();
+  fillChips('chips-look',LOOK_CHIPS);
+  fillChips('chips-persona',PERSONA_CHIPS);
+  fillChips('chips-origin',ORIGIN_CHIPS);
+  fillChips('chips-talent',TALENT_CHIPS);
+  fillAIForm();
+
+  // intro
+  $('btn-start').addEventListener('click',function(){
+    if(App.state.started&&App.state.character){
+      confirmDialog('重新创建角色','将开启一次新的模拟，当前进度会被新存档覆盖（建议先在侧边栏导出旧存档）。继续吗？',function(){
+        App.state.history=[];App.state.chapter=1;App.state.turn=0;App.state.started=false;saveState();
+        fillCharForm(null);showView('view-create');
+      });
+    }else{showView('view-create');}
+  });
+  $('btn-continue').addEventListener('click',function(){
+    renderStream();showView('view-main');updateChapterBadge();
+  });
+  $('btn-goto-ai').addEventListener('click',function(){fillAIForm();showView('view-ai');});
+
+  // novel import
+  $('btn-import-novel').addEventListener('click',function(){$('novel-file').click();});
+  $('btn-reimport-novel').addEventListener('click',function(){$('novel-file').click();});
+  $('novel-file').addEventListener('change',function(){
+    const f=this.files[0];
+    if(f) handleNovelFile(f);
+    this.value='';
+  });
+  $('btn-remove-novel').addEventListener('click',function(){
+    confirmDialog('移除已导入原著','将从本浏览器中删除已导入的原著文本，移除后需重新导入才能继续模拟。确定吗？',function(){
+      idbDelete().catch(function(){}).then(function(){
+        App.novel='';App.index=null;_importedMeta=null;
+        buildIndex();updateNovelUI();updateChapterBadge();
+        toast('已移除原著文本');
+      });
+    });
+  });
+
+  // create
+  $('btn-create-back').addEventListener('click',function(){showView('view-intro');});
+  $('btn-random').addEventListener('click',randomInspire);
+  $('btn-enter').addEventListener('click',createAndEnter);
+
+  // ai settings
+  $('ai-provider').addEventListener('change',function(){
+    const p=PROVIDERS[this.value]||PROVIDERS.custom;
+    $('ai-url').value=p.url;$('ai-model').value=p.model;
+  });
+  $('ai-temp').addEventListener('input',function(){$('ai-temp-val').textContent=this.value;});
+  $('btn-test-conn').addEventListener('click',async function(){
+    readAIForm();
+    if(App.state.ai.manual){$('ai-test-result').textContent='手动粘贴模式无需测连';return;}
+    if(!App.state.ai.key||!App.state.ai.url){$('ai-test-result').textContent='请先填写接口地址与 API Key';return;}
+    $('ai-test-result').textContent='正在测试连接……';
+    const r=await testConnection();
+    if(r.ok){App.state.ai.connected=true;saveState();$('ai-test-result').textContent='✅ 连接成功，模型 '+App.state.ai.model+' 可用';}
+    else{App.state.ai.connected=false;saveState();$('ai-test-result').textContent='❌ '+r.msg;}
+  });
+  $('btn-ai-save').addEventListener('click',function(){
+    readAIForm();saveState();toast('AI 设置已保存');
+    if(App.state.started&&App.state.character){renderStream();showView('view-main');updateChapterBadge();}
+    else showView('view-intro');
+  });
+  $('btn-ai-back').addEventListener('click',function(){
+    readAIForm();saveState();
+    if(App.state.started&&App.state.character){renderStream();showView('view-main');updateChapterBadge();}
+    else showView('view-intro');
+  });
+
+  // main
+  $('btn-drawer').addEventListener('click',openDrawer);
+  $('btn-drawer-close').addEventListener('click',closeDrawer);
+  $('drawer-mask').addEventListener('click',closeDrawer);
+  document.querySelectorAll('.drawer-tab').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.drawer-tab').forEach(function(x){x.classList.remove('on');});
+      b.classList.add('on');
+      ['tab-char','tab-save','tab-help'].forEach(function(id){$(id).classList.add('hidden');});
+      $(b.dataset.tab).classList.remove('hidden');
+      if(b.dataset.tab==='tab-save') renderSaveTab();
+      if(b.dataset.tab==='tab-char') renderCharView();
+    });
+  });
+  $('btn-edit-char').addEventListener('click',function(){
+    App.editing=!App.editing;
+    const box=$('char-edit');
+    if(!App.editing){box.classList.add('hidden');return;}
+    box.classList.remove('hidden');
+    box.innerHTML='<div class="field"><label>快速编辑（每行一项「字段：内容」，如 外貌：……）</label>'+
+      '<textarea id="char-edit-text" style="min-height:120px"></textarea>'+
+      '<div class="hint">可用字段：姓名/性别/年龄/外貌/性格/身世/觉醒系/天赋/穿越者。留空字段不变。</div>'+
+      '<button class="btn small primary" id="char-edit-save">保存修改</button></div>';
+    $('char-edit-save').addEventListener('click',function(){
+      const lines=$('char-edit-text').value.split('\n');
+      const map={'姓名':'name','性别':'gender','年龄':'age','外貌':'look','性格':'persona','身世':'origin','觉醒系':'element','初次觉醒魔法系':'element','天赋':'talent','天生天赋':'talent','穿越者':'transmigrator'};
+      const c=App.state.character||{};
+      lines.forEach(function(l){
+        const i=l.indexOf('：');const j=l.indexOf(':');
+        const sep=i>=0&&(j<0||i<j)?i:j;
+        if(sep<=0) return;
+        const k=l.slice(0,sep).trim(),v=l.slice(sep+1).trim();
+        if(map[k]&&v) c[map[k]]=v;
+      });
+      App.state.character=c;saveState();renderCharView();toast('角色卡已更新');
+      App.editing=false;box.classList.add('hidden');
+    });
+  });
+  $('btn-ai-settings').addEventListener('click',function(){closeDrawer();fillAIForm();showView('view-ai');});
+
+  // composer
+  $('btn-send').addEventListener('click',function(){
+    const v=$('composer-input').value.trim();
+    if(!v){toast('请输入你的行动');return;}
+    if(App.streaming) return;
+    $('composer-input').value='';
+    sendTurn(v);
+  });
+  $('composer-input').addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();$('btn-send').click();}
+  });
+  $('btn-stop').addEventListener('click',function(){if(App.abort)App.abort.abort();});
+
+  // commands
+  $('cmd-row').addEventListener('click',function(e){
+    const b=e.target.closest('.cmd-chip');
+    if(!b||App.streaming) return;
+    const cmd=b.dataset.cmd;
+    if(cmd==='__nextchapter'){
+      const n=App.state.chapter+1;
+      if(!chapterAt(n)){toast('已是最后一章');return;}
+      applyChapter(n);return;
+    }
+    if(cmd==='__jump'){openChapterModal();return;}
+    sendTurn(cmd);
+  });
+  $('chapter-badge').addEventListener('click',openChapterModal);
+
+  // stream delegation: choice buttons
+  $('stream').addEventListener('click',function(e){
+    const b=e.target.closest('.choice-btn');
+    if(!b||App.streaming) return;
+    sendTurn(b.dataset.choice||b.textContent.trim());
+  });
+
+  // chapter modal
+  $('chap-close').addEventListener('click',function(){closeModal('modal-chapter');});
+  $('chap-input').addEventListener('input',function(){previewChapter(this.value);});
+  $('chap-go').addEventListener('click',function(){
+    const n=parseInt($('chap-input').value,10);
+    applyChapter(n);closeModal('modal-chapter');
+  });
+  $('chap-prev').addEventListener('click',function(){
+    const n=Math.max(1,App.state.chapter-1);
+    $('chap-input').value=n;previewChapter(n);applyChapter(n,true);
+    $('chap-cur').textContent=chapterTitle(n);
+  });
+  $('chap-next').addEventListener('click',function(){
+    const n=Math.min(buildIndex().length,App.state.chapter+1);
+    $('chap-input').value=n;previewChapter(n);applyChapter(n,true);
+    $('chap-cur').textContent=chapterTitle(n);
+  });
+
+  // manual modal
+  $('btn-copy-prompt').addEventListener('click',function(){
+    const txt=$('manual-prompt').textContent;
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){toast('已复制，去粘贴给你的 AI 吧');}).catch(function(){fallbackCopy(txt);});
+    }else fallbackCopy(txt);
+  });
+  function fallbackCopy(txt){
+    const ta=document.createElement('textarea');
+    ta.value=txt;document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');toast('已复制');}catch(e){toast('复制失败，请手动全选复制');}
+    ta.remove();
+  }
+  $('btn-manual-cancel').addEventListener('click',function(){
+    const hist=App.state.history;
+    if(hist.length&&hist[hist.length-1].role==='user'&&hist[hist.length-1].content===_pendingUser) hist.pop();
+    saveState();renderStream();closeModal('modal-manual');
+  });
+  $('btn-manual-confirm').addEventListener('click',confirmManual);
+
+  // save tab
+  $('btn-export').addEventListener('click',function(){
+    const blob=new Blob([JSON.stringify(App.state,null,1)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='全职法师模拟器存档_'+chapterTitle(App.state.chapter).replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g,'')+'.json';
+    a.click();URL.revokeObjectURL(a.href);
+    toast('存档已导出');
+  });
+  $('btn-import').addEventListener('click',function(){$('import-file').click();});
+  $('import-file').addEventListener('change',function(){
+    const f=this.files[0];if(!f) return;
+    const fr=new FileReader();
+    fr.onload=function(){
+      try{
+        const s=JSON.parse(fr.result);
+        if(!s.character){toast('存档文件格式不正确');return;}
+        confirmDialog('导入存档','导入后将覆盖当前浏览器中的存档，确定吗？',function(){
+          const d=defaultState();
+          s.ai=Object.assign(defaultAI(),s.ai||{});
+          App.state=Object.assign(d,s);
+          saveState();renderStream();renderSaveTab();renderCharView();updateChapterBadge();
+          toast('存档已导入');
+        });
+      }catch(e){toast('解析失败：'+e.message);}
+    };
+    fr.readAsText(f);
+    this.value='';
+  });
+  $('btn-reset').addEventListener('click',function(){
+    confirmDialog('重置全部存档','将清空角色、对话与进度，且无法恢复（建议先导出备份）。确定吗？',function(){
+      localStorage.removeItem(LS_KEY);
+      App.state=defaultState();
+      $('btn-continue').classList.add('hidden');
+      $('btn-start').textContent='✦ 创建角色，进入世界';
+      renderStream();closeDrawer();showView('view-intro');
+      toast('已重置');
+    });
+  });
+
+  // confirm dialog
+  $('confirm-yes').addEventListener('click',function(){closeModal('modal-confirm');if(_confirmCb)_confirmCb();_confirmCb=null;});
+  $('confirm-no').addEventListener('click',function(){closeModal('modal-confirm');_confirmCb=null;});
+
+  window.addEventListener('beforeunload',saveState);
+}
+init();
+</script>
+</body>
+</html>
